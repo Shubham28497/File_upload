@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 require("dotenv").config();
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
@@ -6,6 +7,19 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const PORT = 5000;
 const app = express();
 
+//* connect mongodb
+mongoose
+  .connect("mongodb://localhost:27017/file-upload")
+  .then(() => console.log("DB connected"))
+  .catch((err) => console.log(err));
+
+//* image schema
+const imageSchema = new mongoose.Schema({
+  url: String,
+  public_id: String,
+});
+//*model
+const Image = mongoose.model("Image", imageSchema);
 //! Configure cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -38,10 +52,21 @@ const upload = multer({
 });
 
 //! uplaod route
-app.post("/upload", upload.single('file'), async (req, res) => {
+app.post("/upload", upload.single("file"), async (req, res) => {
   console.log(req.file);
-  res.json({
-    message: "File uploaded",
+  const uploaded = await Image.create({
+    url: req.file.path,
+    public_id: req.file.filename,
   });
+  res.json({ message: "File uploaded", uploaded });
+});
+//! get all images
+app.get("/images", async (req, res) => {
+  try {
+    const images = await Image.find();
+    res.json({ images });
+  } catch (err) {
+    res.json(err);
+  }
 });
 app.listen(PORT, console.log(`Server is running on ${PORT}`));
