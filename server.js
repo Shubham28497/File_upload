@@ -13,4 +13,27 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+//!configure multer storage cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "images-folder",
+    format: async (req, file) => "png",
+    public_id: (req, file) => file.fieldname + "_" + Date.now(),
+    transformation: [{ width: 800, height: 600, crop: "fill" }],
+  },
+});
+
+//!configure multer
+const upload = multer({
+  storage,
+  limits: 1024 * 1020 * 5, //5mb limit
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Not an image! please upload an image", false));
+    }
+  },
+});
 app.listen(PORT, console.log(`Server is running on ${PORT}`));
