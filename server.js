@@ -36,4 +36,12 @@ const upload = multer({
     }
   },
 });
+
+//! uplaod route
+app.post("/upload", upload.single('file'), async (req, res) => {
+  console.log(req.file);
+  res.json({
+    message: "File uploaded",
+  });
+});
 app.listen(PORT, console.log(`Server is running on ${PORT}`));
